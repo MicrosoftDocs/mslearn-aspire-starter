@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using eShop.Catalog.API;
 using eShop.Catalog.API.Model;
 using eShop.Catalog.Data;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text;
 
 namespace Microsoft.AspNetCore.Builder;
 
@@ -31,7 +33,8 @@ public static class CatalogApi
 
     public static async Task<Results<Ok<PaginatedItems<CatalogItem>>, BadRequest<string>>> GetAllItems(
         [AsParameters] PaginationRequest paginationRequest,
-        [AsParameters] CatalogServices services)
+        [AsParameters] CatalogServices services,
+        IDistributedCache cache)
     {
         var pageSize = paginationRequest.PageSize;
         var pageIndex = paginationRequest.PageIndex;
@@ -39,16 +42,43 @@ public static class CatalogApi
         var totalItems = await services.DbContext.CatalogItems
             .LongCountAsync();
 
-        var itemsOnPage = await services.DbContext.CatalogItems
-            .OrderBy(c => c.Name)
-            .Skip(pageSize * pageIndex)
-            .Take(pageSize)
-            .AsNoTracking()
-            .ToListAsync();
+        // Check it there are cached items
+        var cachedItems = await cache.GetAsync("catalogItems");
 
-        ChangeUriPlaceholder(services.Options.Value, itemsOnPage);
+        if (cachedItems is null)
+        {
+            // There are no items in the cache. Get them from the database
+            var itemsOnPage = await services.DbContext.CatalogItems
+                .OrderBy(c => c.Name)
+                .Skip(pageSize * pageIndex)
+                .Take(pageSize)
+                .AsNoTracking()
+                .ToListAsync();
 
-        return TypedResults.Ok(new PaginatedItems<CatalogItem>(pageIndex, pageSize, totalItems, itemsOnPage));
+            // Store the items in the cache for 10 seconds
+            await cache.SetAsync("catalogItems", Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(itemsOnPage)), new()
+            {
+                AbsoluteExpiration = DateTime.Now.AddSeconds(10)
+            });
+
+            ChangeUriPlaceholder(services.Options.Value, itemsOnPage);
+            return TypedResults.Ok(new PaginatedItems<CatalogItem>(pageIndex, pageSize, totalItems, itemsOnPage));
+
+        } 
+        else
+        {
+            // There are items in the cache. Deserialize them to display.
+            var itemsOnPage = System.Text.Json.JsonSerializer.Deserialize<List<CatalogItem>>(cachedItems);
+            // Make sure itemsOnPage is not null
+            if (itemsOnPage is null)
+            {
+                itemsOnPage = new List<CatalogItem>();
+            }
+
+            ChangeUriPlaceholder(services.Options.Value, itemsOnPage);
+            return TypedResults.Ok(new PaginatedItems<CatalogItem>(pageIndex, pageSize, totalItems, itemsOnPage));
+        }
+        
     }
 
     public static async Task<Ok<List<CatalogItem>>> GetItemsByIds(

@@ -5,12 +5,16 @@
     <RootNamespace>eShop.Catalog.API</RootNamespace>
     <UserSecretsId>d1b521ec-3411-4d39-98c6-8509466ed471</UserSecretsId>
     <Nullable>enable</Nullable>
-		<ImplicitUsings>enable</ImplicitUsings>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Catalog.Data\Catalog.Data.csproj" />
     <ProjectReference Include="..\eShop.ServiceDefaults\eShop.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="8.0.0-preview.3.24105.21" />
   </ItemGroup>
 
 </Project>
