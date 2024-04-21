@@ -53,7 +53,7 @@ internal static class KeycloakHostingExtensions
         // Set the container entry point to 'start' instead of 'start-dev'
         manifestResource.Annotations.Add(new ExecutableArgsCallbackAnnotation(args => args.Add("start")));
 
-        context.WriteContainer(resource);
+        await context.WriteContainer(resource);
     }
 }
 
