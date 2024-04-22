@@ -1,5 +1,3 @@
-using Projects;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Databases
@@ -17,32 +15,30 @@ var idp = builder.AddKeycloakContainer("idp", tag: "23.0")
 
 // DB Manager Apps
 
-builder.AddProject<Catalog_Data_Manager>("catalog-db-mgr")
+builder.AddProject<Projects.Catalog_Data_Manager>("catalog-db-mgr")
     .WithReference(catalogDb);
 
 // API Apps
 
-var catalogApi = builder.AddProject<Catalog_API>("catalog-api")
+var catalogApi = builder.AddProject<Projects.Catalog_API>("catalog-api")
     .WithReference(catalogDb);
 
-var basketApi = builder.AddProject<Basket_API>("basket-api")
+var basketApi = builder.AddProject<Projects.Basket_API>("basket-api")
         .WithReference(mongo)
         .WithReference(idp);
 
 // Apps
 
-var webApp = builder.AddProject<WebApp>("webapp")
+var webApp = builder.AddProject<Projects.WebApp>("webapp", "https")
     .WithReference(catalogApi)
     .WithReference(basketApi)
-    .WithReference(idp)
-    // Force HTTPS profile for web app (required for OIDC operations)
-    .WithLaunchProfile("https");
+    .WithReference(idp);
 
 // Inject the project URLs for Keycloak realm configuration
-idp.WithEnvironment("WEBAPP_HTTP", () => webApp.GetEndpoint("http").Value);
-idp.WithEnvironment("WEBAPP_HTTPS", () => webApp.GetEndpoint("https").Value);
+idp.WithEnvironment("WEBAPP_HTTP", $"{webApp.GetEndpoint("http")}");
+idp.WithEnvironment("WEBAPP_HTTPS", $"{webApp.GetEndpoint("https")}");
 
 // Inject assigned URLs for Catalog API
-catalogApi.WithEnvironment("CatalogOptions__PicBaseAddress", () => catalogApi.GetEndpoint("http").Value);
+catalogApi.WithEnvironment("CatalogOptions__PicBaseAddress", $"{catalogApi.GetEndpoint("http")}");
 
 builder.Build().Run();
