@@ -6,7 +6,7 @@ namespace eShop.Basket.API.Storage;
 
 public class MongoBasketStore
 {
-  private static IMongoCollection<CustomerBasket> _basketCollection;
+  private IMongoCollection<CustomerBasket> _basketCollection;
 
   /// <summary>
   /// When the MongoBasketStore is created, it will be passed an IMongoClient instance. 
