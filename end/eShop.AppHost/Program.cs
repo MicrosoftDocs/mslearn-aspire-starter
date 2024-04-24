@@ -2,47 +2,42 @@ using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+// RabbitMQ message broker
+
+var messaging = builder.AddRabbitMQContainer("messaging");
+
 // Databases
 
 var postgres = builder.AddPostgres("postgres").WithPgAdmin();
 var catalogDb = postgres.AddDatabase("CatalogDB");
-var mongo = builder.AddMongoDB("mongo")
-  .WithMongoExpress()
-  .AddDatabase("BasketDB");
 
-// Identity Providers
 
-var idp = builder.AddKeycloakContainer("idp", tag: "23.0")
-    .ImportRealms("../Keycloak/data/import");
+// Cache
+var redis = builder.AddRedis("cache");
 
 // DB Manager Apps
 
 builder.AddProject<Catalog_Data_Manager>("catalog-db-mgr")
     .WithReference(catalogDb);
 
+
 // API Apps
 
 var catalogApi = builder.AddProject<Catalog_API>("catalog-api")
-    .WithReference(catalogDb);
-
-var basketApi = builder.AddProject<Basket_API>("basket-api")
-        .WithReference(mongo)
-        .WithReference(idp);
+    .WithReference(catalogDb)
+    .WithReference(redis)
+    .WithReference(messaging);
 
 // Apps
 
-var webApp = builder.AddProject<WebApp>("webapp")
+builder.AddProject<WebApp>("webapp")
     .WithReference(catalogApi)
-    .WithReference(basketApi)
-    .WithReference(idp)
-    // Force HTTPS profile for web app (required for OIDC operations)
-    .WithLaunchProfile("https");
+    .WithReference(redis);
 
-// Inject the project URLs for Keycloak realm configuration
-idp.WithEnvironment("WEBAPP_HTTP", () => webApp.GetEndpoint("http").Value);
-idp.WithEnvironment("WEBAPP_HTTPS", () => webApp.GetEndpoint("https").Value);
+builder.AddProject<Projects.RabbitConsumer>("consumers").
+        WithReference(messaging);
 
 // Inject assigned URLs for Catalog API
-catalogApi.WithEnvironment("CatalogOptions__PicBaseAddress", () => catalogApi.GetEndpoint("http").Value);
+catalogApi.WithEnvironment("CatalogOptions__PicBaseAddress", () => catalogApi.GetEndpoint("http").UriString);
 
 builder.Build().Run();
