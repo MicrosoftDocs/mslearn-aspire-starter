@@ -17,7 +17,7 @@ internal static class KeycloakHostingExtensions
         return builder
             .AddResource(keycloakContainer)
             .WithAnnotation(new ContainerImageAnnotation { Registry = "quay.io", Image = "keycloak/keycloak", Tag = tag ?? "latest" })
-            .WithHttpEndpoint(hostPort: port, containerPort: DefaultContainerPort)
+            .WithHttpEndpoint(port: port, targetPort: DefaultContainerPort)
             .WithEnvironment("KEYCLOAK_ADMIN", "admin")
             .WithEnvironment("KEYCLOAK_ADMIN_PASSWORD", "admin")
             .WithArgs("start-dev")
@@ -27,8 +27,8 @@ internal static class KeycloakHostingExtensions
     public static IResourceBuilder<KeycloakContainerResource> ImportRealms(this IResourceBuilder<KeycloakContainerResource> builder, string source)
     {
         builder
-            .WithVolumeMount(source, "/opt/keycloak/data/import", VolumeMountType.Bind)
-            .WithAnnotation(new ExecutableArgsCallbackAnnotation(args =>
+            .WithBindMount(source, "/opt/keycloak/data/import")
+            .WithAnnotation(new CommandLineArgsCallbackAnnotation(args =>
             {
                 args.Clear();
                 args.Add("start-dev");
@@ -44,16 +44,16 @@ internal static class KeycloakHostingExtensions
 
         foreach (var annotation in resource.Annotations)
         {
-            if (annotation is not ExecutableArgsCallbackAnnotation)
+            if (annotation is not CommandLineArgsCallbackAnnotation)
             {
                 manifestResource.Annotations.Add(annotation);
             }
         }
 
         // Set the container entry point to 'start' instead of 'start-dev'
-        manifestResource.Annotations.Add(new ExecutableArgsCallbackAnnotation(args => args.Add("start")));
+        manifestResource.Annotations.Add(new CommandLineArgsCallbackAnnotation(args => args.Add("start")));
 
-        context.WriteContainer(resource);
+        context.WriteContainerAsync(resource);
     }
 }
 

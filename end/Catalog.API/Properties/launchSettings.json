@@ -1,11 +1,23 @@
 {
   "profiles": {
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:17150;http://localhost:15150",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_ENVIRONMENT": "Development",
+        "DOTNET_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22150"
+      }
+    },
     "http": {
       "commandName": "Project",
       "launchBrowser": true,
       "applicationUrl": "http://localhost:5222/",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_RESOURCE_SERVICE_ENDPOINT_URL": "http://localhost:22002"
       }
     }
   }
