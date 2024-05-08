@@ -10,11 +10,6 @@ public partial class CatalogService(HttpClient httpClient, ILogger<CatalogServic
     {
         var uri = GetAllCatalogItemsUri(remoteServiceBaseUrl, pageIndex, pageSize, brand, type);
 
-        if (logger.IsEnabled(LogLevel.Information))
-        {
-            logger.LogInformation("Requesting all items from URI: {uri}", uri);
-        }
-
         var result = await httpClient.GetFromJsonAsync<CatalogResult>(uri);
         return result ?? new(0, 0, 0, []);
     }
@@ -32,12 +27,6 @@ public partial class CatalogService(HttpClient httpClient, ILogger<CatalogServic
         var result = await httpClient.GetFromJsonAsync<CatalogBrand[]>(uri);
         return result ?? [];
     }
-
-    [LoggerMessage(
-        EventId = 0,
-        Level = LogLevel.Information,
-        Message = "Getting brands from URI: {uri}")]
-    public static partial void LogGetBrands(string uri, ILogger logger);
 
     public async Task<IEnumerable<CatalogItemType>> GetTypes()
     {
@@ -74,4 +63,10 @@ public partial class CatalogService(HttpClient httpClient, ILogger<CatalogServic
 
         return $"{baseUri}items{filterPath}?pageIndex={pageIndex}&pageSize={pageSize}";
     }
+
+    [LoggerMessage(
+        EventId = 0,
+        Level = LogLevel.Information,
+        Message = "Getting brands from URI: {uri}")]
+    public static partial void LogGetBrands(string uri, ILogger logger);
 }

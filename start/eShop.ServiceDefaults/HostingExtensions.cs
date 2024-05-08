@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
-using OpenTelemetry.Logs;
+using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
@@ -25,7 +25,7 @@ public static partial class HostingExtensions
             http.AddStandardResilienceHandler();
 
             // Turn on service discovery by default
-            http.UseServiceDiscovery();
+            http.AddServiceDiscovery();
         });
 
         return builder;
@@ -67,9 +67,10 @@ public static partial class HostingExtensions
 
         if (useOtlpExporter)
         {
-            builder.Services.Configure<OpenTelemetryLoggerOptions>(logging => logging.AddOtlpExporter());
-            builder.Services.ConfigureOpenTelemetryMeterProvider(metrics => metrics.AddOtlpExporter());
-            builder.Services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddOtlpExporter());
+            builder.Services.AddOpenTelemetry().UseOtlpExporter();
+            //builder.Services.Configure<OpenTelemetryLoggerOptions>(logging => logging.AddOtlpExporter());
+            //builder.Services.ConfigureOpenTelemetryMeterProvider(metrics => metrics.AddOtlpExporter());
+            //builder.Services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddOtlpExporter());
         }
 
         // Configure alternative exporters
