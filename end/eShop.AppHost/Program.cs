@@ -4,36 +4,41 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 // Databases
 
-var postgres = builder.AddPostgres("postgres").WithPgAdmin();
-var catalogDb = postgres.AddDatabase("CatalogDB");
+var catalogDB = builder.AddPostgres("postgres")
+  .WithBindMount("../Catalog.API/Seed", "/docker-entrypoint-initdb.d")
+  .WithEnvironment("POSTGRES_DB", "postgres")
+  .WithPgAdmin();
 var mongo = builder.AddMongoDB("mongo")
   .WithMongoExpress()
   .AddDatabase("BasketDB");
+
+var cosmosdbService = builder.AddAzureCosmosDB("cdb")
+                             .AddDatabase("cosmosdb")
+                             .RunAsEmulator();
 
 // Identity Providers
 
 var idp = builder.AddKeycloakContainer("idp", tag: "23.0")
     .ImportRealms("../Keycloak/data/import");
 
-// DB Manager Apps
-
-builder.AddProject<Catalog_Data_Manager>("catalog-db-mgr")
-    .WithReference(catalogDb);
-
 // API Apps
 
 var catalogApi = builder.AddProject<Catalog_API>("catalog-api")
-    .WithReference(catalogDb);
+    .WithReference(catalogDB);
 
 var basketApi = builder.AddProject<Basket_API>("basket-api")
         .WithReference(mongo)
         .WithReference(idp);
+
+var reviewApi = builder.AddProject<Review_API>("review-api")
+    .WithReference(cosmosdbService);
 
 // Apps
 
 var webApp = builder.AddProject<WebApp>("webapp")
     .WithReference(catalogApi)
     .WithReference(basketApi)
+    .WithReference(reviewApi)
     .WithReference(idp)
     // Force HTTPS profile for web app (required for OIDC operations)
     .WithLaunchProfile("https");

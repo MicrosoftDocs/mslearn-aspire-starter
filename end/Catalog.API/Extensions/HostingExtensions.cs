@@ -8,7 +8,7 @@ public static class HostingExtensions
 {
     public static void AddApplicationServices(this IHostApplicationBuilder builder)
     {
-        builder.AddNpgsqlDbContext<CatalogDbContext>("CatalogDB");
+        builder.AddNpgsqlDbContext<CatalogDbContext>("postgres");
 
         builder.Services.Configure<CatalogOptions>(builder.Configuration.GetSection(nameof(CatalogOptions)));
     }

@@ -1,6 +1,4 @@
-﻿using MongoDB.Bson;
-
-namespace eShop.Basket.API.Models;
+﻿namespace eShop.Basket.API.Models;
 
 public class CustomerBasket
 {
