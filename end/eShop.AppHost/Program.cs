@@ -31,18 +31,30 @@ var basketApi = builder.AddProject<Basket_API>("basket-api")
 
 // Apps
 
-var webApp = builder.AddProject<WebApp>("webapp")
+// Force HTTPS profile for web app (required for OIDC operations)
+var webApp = builder.AddProject<Projects.WebApp>("webapp")
     .WithReference(catalogApi)
     .WithReference(basketApi)
-    .WithReference(idp)
-    // Force HTTPS profile for web app (required for OIDC operations)
-    .WithLaunchProfile("https");
+    .WithReference(idp, env: "Identity__ClientSecret");
 
 // Inject the project URLs for Keycloak realm configuration
-idp.WithEnvironment("WEBAPP_HTTP", () => webApp.GetEndpoint("http").Value);
-idp.WithEnvironment("WEBAPP_HTTPS", () => webApp.GetEndpoint("https").Value);
+var webAppHttp = webApp.GetEndpoint("http");
+var webAppHttps = webApp.GetEndpoint("https");
+idp.WithEnvironment("WEBAPP_HTTP_CONTAINERHOST", webAppHttp);
+idp.WithEnvironment("WEBAPP_HTTP", () => $"{webAppHttp.Scheme}://{webAppHttp.Host}:{webAppHttp.Port}");
+if (webAppHttps.Exists)
+{
+  idp.WithEnvironment("WEBAPP_HTTPS_CONTAINERHOST", webAppHttps);
+  idp.WithEnvironment("WEBAPP_HTTPS", () => $"{webAppHttps.Scheme}://{webAppHttps.Host}:{webAppHttps.Port}");
+}
+else
+{
+  // Still need to set these environment variables so the KeyCloak realm import doesn't fail
+  idp.WithEnvironment("WEBAPP_HTTPS_CONTAINERHOST", webAppHttp);
+  idp.WithEnvironment("WEBAPP_HTTPS", () => $"{webAppHttp.Scheme}://{webAppHttp.Host}:{webAppHttp.Port}");
+}
 
 // Inject assigned URLs for Catalog API
-catalogApi.WithEnvironment("CatalogOptions__PicBaseAddress", () => catalogApi.GetEndpoint("http").Value);
+catalogApi.WithEnvironment("CatalogOptions__PicBaseAddress", catalogApi.GetEndpoint("http"));
 
 builder.Build().Run();
