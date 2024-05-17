@@ -74,7 +74,7 @@ public static class OpenApiExtensions
         services.AddSwaggerGen();
 
         services.AddOptions<SwaggerGenOptions>()
-            .Configure<IHttpClientFactory, ServiceEndPointResolver>((options, httpClientFactory, serviceEndPointResolver) =>
+            .Configure<IHttpClientFactory, ServiceEndpointResolver>((options, httpClientFactory, serviceEndPointResolver) =>
             {
                 /// {
                 ///   "OpenApi": {
