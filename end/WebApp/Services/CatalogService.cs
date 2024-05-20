@@ -9,6 +9,7 @@ public class CatalogService(HttpClient httpClient)
     public async Task<CatalogResult> GetCatalogItems(int pageIndex, int pageSize, int? brand, int? type)
     {
         var uri = GetAllCatalogItemsUri(remoteServiceBaseUrl, pageIndex, pageSize, brand, type);
+
         var result = await httpClient.GetFromJsonAsync<CatalogResult>(uri);
         return result ?? new(0, 0, 0, []);
     }

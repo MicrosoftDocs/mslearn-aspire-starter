@@ -41,7 +41,6 @@ public static class CatalogApi
         var totalItems = await services.DbContext.CatalogItems
             .LongCountAsync();
 
-        // There are no items in the cache. Get them from the database
         var itemsOnPage = await services.DbContext.CatalogItems
             .OrderBy(c => c.Name)
             .Skip(pageSize * pageIndex)
