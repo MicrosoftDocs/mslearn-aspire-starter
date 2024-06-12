@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using eShop.Catalog.API;
 using eShop.Catalog.API.Model;
 using eShop.Catalog.Data;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text;
 
 namespace Microsoft.AspNetCore.Builder;
 
@@ -31,8 +33,15 @@ public static class CatalogApi
 
     public static async Task<Results<Ok<PaginatedItems<CatalogItem>>, BadRequest<string>>> GetAllItems(
         [AsParameters] PaginationRequest paginationRequest,
-        [AsParameters] CatalogServices services)
+        [AsParameters] CatalogServices services,
+        Azure.Storage.Queues.QueueServiceClient client)
     {
+        var queueClient = client.GetQueueClient("catalogrequests");
+        CancellationToken stoppingToken = new CancellationToken();
+        await queueClient.CreateIfNotExistsAsync(cancellationToken: stoppingToken);
+
+        await queueClient.SendMessageAsync("Catalog Request - All items requested");
+
         var pageSize = paginationRequest.PageSize;
         var pageIndex = paginationRequest.PageIndex;
 
@@ -47,8 +56,8 @@ public static class CatalogApi
             .ToListAsync();
 
         ChangeUriPlaceholder(services.Options.Value, itemsOnPage);
-
         return TypedResults.Ok(new PaginatedItems<CatalogItem>(pageIndex, pageSize, totalItems, itemsOnPage));
+        
     }
 
     public static async Task<Ok<List<CatalogItem>>> GetItemsByIds(
