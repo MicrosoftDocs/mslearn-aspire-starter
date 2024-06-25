@@ -5,16 +5,16 @@
     <RootNamespace>eShop.Catalog.API</RootNamespace>
     <UserSecretsId>d1b521ec-3411-4d39-98c6-8509466ed471</UserSecretsId>
     <Nullable>enable</Nullable>
-		<ImplicitUsings>enable</ImplicitUsings>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Microsoft.Azure.Cosmos" Version="8.0.1" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Catalog.Data\Catalog.Data.csproj" />
     <ProjectReference Include="..\eShop.ServiceDefaults\eShop.ServiceDefaults.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Seed\" />
   </ItemGroup>
 
 </Project>

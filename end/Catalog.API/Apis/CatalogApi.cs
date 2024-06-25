@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using eShop.Catalog.API;
 using eShop.Catalog.API.Model;
 using eShop.Catalog.Data;
+using Microsoft.Azure.Cosmos;
 
 namespace Microsoft.AspNetCore.Builder;
 
@@ -31,8 +32,27 @@ public static class CatalogApi
 
     public static async Task<Results<Ok<PaginatedItems<CatalogItem>>, BadRequest<string>>> GetAllItems(
         [AsParameters] PaginationRequest paginationRequest,
-        [AsParameters] CatalogServices services)
+        [AsParameters] CatalogServices services,
+        CosmosClient cosmosClient)
     {
+
+        Database db = await cosmosClient.CreateDatabaseIfNotExistsAsync(
+            id: "catalogcosmosdb",
+            throughput: 400);
+
+        Container container = await db.CreateContainerIfNotExistsAsync(
+            id: "products",
+            partitionKeyPath: "/id"
+        );
+
+        var item = new
+        {
+            id = "68649263",
+            name = "Large backpack"
+        };
+
+        await container.CreateItemAsync(item);
+
         var pageSize = paginationRequest.PageSize;
         var pageIndex = paginationRequest.PageIndex;
 
