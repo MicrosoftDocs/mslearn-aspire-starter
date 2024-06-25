@@ -6,6 +6,8 @@ builder.AddServiceDefaults();
 builder.AddDefaultOpenApi();
 builder.AddApplicationServices();
 
+builder.AddAzureCosmosClient("localcosmosdb");
+
 builder.Services.AddProblemDetails();
 
 var app = builder.Build();

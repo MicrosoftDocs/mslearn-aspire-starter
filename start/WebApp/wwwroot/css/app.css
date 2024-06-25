@@ -258,11 +258,6 @@ body {
     color: #FFF;
 }
 
-.button.button-primary.is-disabled {
-    cursor: not-allowed;
-    background: #AAA;
-}
-
 .button.button.button-secondary {
     border: 1px solid #444;
     background: #FFF;
