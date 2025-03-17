@@ -1,10 +1,11 @@
+using Aspire.Hosting;
 using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
 // RabbitMQ message broker
 
-var messaging = builder.AddRabbitMQContainer("messaging");
+var messaging = builder.AddRabbitMQ("messaging");
 
 // Databases
 
@@ -38,6 +39,9 @@ builder.AddProject<Projects.RabbitConsumer>("consumers").
         WithReference(messaging);
 
 // Inject assigned URLs for Catalog API
-catalogApi.WithEnvironment("CatalogOptions__PicBaseAddress", () => catalogApi.GetEndpoint("http").UriString);
+catalogApi.WithEnvironment("CatalogOptions__PicBaseAddress", () => catalogApi.GetEndpoint("http").Url);
+
+
+
 
 builder.Build().Run();
