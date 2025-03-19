@@ -2,7 +2,8 @@
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddRabbitMQ("messaging");
+
+builder.AddRabbitMQClient("messaging");
 
 builder.AddRedisDistributedCache("cache");
 
